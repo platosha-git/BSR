@@ -6,16 +6,20 @@ from particle import Particle
 
 def stochastic_solve_point(i: int, j: int, \
         X: npt.ArrayLike, Y: npt.ArrayLike, Z: npt.NDArray[float], \
-        checkBound: Callable[[Particle], bool], f: Callable[[float, float], float], M = 100):
+        x0: float, y0: float, \
+        cX: float, cY: float, \
+        indC: float, indD: float, \
+        u0: float, \
+        checkBound: Callable[[Particle, float], bool], f: Callable[[float, float], float], M = 100):
     u = 0
     for _ in range(M):
         p = Particle(i, j)
-        checkBound(p)
+        checkBound(p, X, Y, x0, y0, cX, cY, indC, indD, u0)
         while p.isAlive:
-            p.addA(f(X[p.i], Y[p.j]))
+            p.addA(f(X[p.i], Y[p.j], x0, y0))
 
             p.next()
-            checkBound(p)
+            checkBound(p, X, Y, x0, y0, cX, cY, indC, indD, u0)
 
         ak = p.getA()
         u += ak + p.u

@@ -1,5 +1,6 @@
 from random import random
 import numpy as np
+import numpy.typing as npt
 from typing import Callable
 
 class Particle:
@@ -38,15 +39,15 @@ class Particle:
         self.u = u0
 
     # отражение на границе (краевая задача 2ого рода -- задан поток тепла F0)
-    def reflection(self, F0, k, Q: Callable[[int, int], float], h, di=0, dj=0):
+    def reflection(self, F0, k, Q: Callable[[int, int, npt.ArrayLike, npt.ArrayLike, float, float], float], X, Y, x0, y0, h, di=0, dj=0):
         self.i += di
         self.j += dj
-        self.addA((Q(self.i, self.j) * h / 2 + F0) * h / k)
+        self.addA((Q(self.i, self.j, X, Y, x0, y0) * h / 2 + F0) * h / k)
 
     # вероятностное отражение на границе (краевая задача 3ого рода)
     # u0 - начальная температура
     # a0 - коэф теплоотдачи
-    def partialReflection(self, u0, Q: Callable[[int, int], float], a0, k, h, di=0, dj=0):
+    def partialReflection(self, u0, Q: Callable[[int, int], float], X, Y, x0, y0, a0, k, h, di=0, dj=0):
         r = random()
         
         # вероятность отражения
@@ -54,7 +55,7 @@ class Particle:
         if r < p0:
             self.i += di
             self.j += dj
-            self.addA(p0 * Q(self.i, self.j) * h * h / 2 / k)
+            self.addA(p0 * Q(self.i, self.j, X, Y, x0, y0) * h * h / 2 / k)
         else:
             # иначе поглощение
             self.absorption(u0)

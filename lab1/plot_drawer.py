@@ -35,5 +35,6 @@ def show_3d_graph(X, Y, Z, center=None, test=None):
         x, y, z = test
         ax.scatter(x, y, z, marker='^')
 
-    plt.axis('equal')
+    #plt.axis('equal')
+    #ax.set_box_aspect(aspect = (1, 1, 1))
     plt.show()
