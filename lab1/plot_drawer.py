@@ -5,9 +5,7 @@ import numpy as np
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator
 
-sb.set_style('whitegrid')
 
-# Plot the surface.
 def show_3d_graph(X, Y, Z, center=None, test=None):
     np.set_printoptions(precision=0)
     X, Y = np.meshgrid(X, Y, indexing='ij')
