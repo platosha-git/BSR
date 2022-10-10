@@ -38,3 +38,20 @@ def form_circuit(Z, u0):
 
 	Z[:, 0].fill(u0)
 	Z[:, -1].fill(u0)
+
+
+
+inner_area = {
+	'border': [0, 0],
+	'size': [0, 0]
+}
+
+# Отверстие расположено посередине
+def form_in_area(a, b, c, d, lenX, lenY):
+	inner_area['border'][0] = (a - c) / 2
+	inner_area['border'][1] = (b - d) / 2
+
+	inner_area['size'][0] = (lenX / a) * c
+	inner_area['size'][1] = (lenY / b) * d
+
+	return inner_area

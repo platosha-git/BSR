@@ -100,19 +100,19 @@ def main():
 
     u0 = 300
     form_circuit(Z, u0)
-    
-    cX = (a - c) / 2
-    cY = (b - d) / 2
 
-    hX = X[1] - X[0]
-    hY = Y[1] - Y[0]
-    hS = hX * hY
+    in_area = form_in_area(a, b, c, d, lenX, lenY)
 
-    icX = int(cX / hX)
-    jcY = int(cY / hY) 
     
-    x0 = a / 2
-    y0 = cY / 2
+    # Точка нагрева
+    x0 = (1 / 2) * in_area['border'][0] + in_area['size'][0]
+    y0 = (1 / 2) * in_area['border'][1] + in_area['size'][1]
+
+    cX = in_area['border'][0]
+    cY = in_area['border'][1]
+
+    icX = int(in_area['border'][0] / (X[1] - X[0]))
+    jcY = int(in_area['border'][1] / (Y[1] - Y[0]))
 
     indC = int((lenX / a) * c)
     indD = int((lenY / b) * d)
