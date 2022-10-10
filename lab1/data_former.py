@@ -19,6 +19,7 @@ def get_data_from_file():
 
 	return a, b, c, d
 
+
 def form_plane(a, b):
 	X = np.linspace(0, a)
 	Y = np.linspace(0, b)
@@ -31,6 +32,7 @@ def form_plane(a, b):
 	Z.fill(-1)
 
 	return X, Y, Z
+
 
 def form_circuit(Z, u0):
 	Z[0].fill(u0)
@@ -51,7 +53,35 @@ def form_in_area(a, b, c, d, lenX, lenY):
 	inner_area['border'][0] = (a - c) / 2
 	inner_area['border'][1] = (b - d) / 2
 
-	inner_area['size'][0] = (lenX / a) * c
-	inner_area['size'][1] = (lenY / b) * d
+	inner_area['size'][0] = int((lenX / a) * c)
+	inner_area['size'][1] = int((lenY / b) * d)
 
 	return inner_area
+
+
+def define_in_area(Z, in_area, hX, hY):
+	lX = int(in_area['border'][0] / hX)
+	lY = int(in_area['border'][1] / hY)
+
+	rX = lX + inner_area['size'][0] + 1
+	rY = lY + inner_area['size'][1]
+
+	for i in range(lX, rX):
+		for j in range(lY, rY):
+			Z[i][j] = np.nan
+
+
+def define_output_area(Z, in_area, hX, hY, u0):
+	lX = int(in_area['border'][0] / hX)
+	lY = int(in_area['border'][1] / hY)
+
+	rX = lX + inner_area['size'][0]
+	rY = lY + inner_area['size'][1]
+	
+	for j in range(lY, rY + 1):
+		Z[lX][j] = u0
+		Z[rX][j] = u0
+
+	for i in range(lX, rX + 1):
+		Z[i][lY] = u0
+		Z[i][rY] = u0

@@ -9,6 +9,9 @@ sb.set_style('whitegrid')
 
 # Plot the surface.
 def show_3d_graph(X, Y, Z, center=None, test=None):
+    np.set_printoptions(precision=0)
+    X, Y = np.meshgrid(X, Y, indexing='ij')
+
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 
     # plot_wireframe, plot_surface

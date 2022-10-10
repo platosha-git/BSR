@@ -2,10 +2,7 @@ from plot_drawer import show_3d_graph
 from stat_solver import *
 from data_former import *
 from particle import Particle
-from random import random
 import numpy as np
-from time import time
-from joblib import Parallel, delayed, dump, load
 
 
 k = 0.0134 # 0.001 # 1 #
@@ -29,12 +26,18 @@ def rightPart(x, y, x0, y0):
 
 F0 = 30
 a0 = 0.1
-def CheckBound(p: Particle, X, Y, x0, y0, cX, cY, indC, indD, u0):
+def CheckBound(p: Particle, X, Y, x0, y0, in_area, u0):
     lenX = len(X)
     lenY = len(Y)
 
     hX = X[1] - X[0]
     hY = Y[1] - Y[0]
+
+    cX = in_area['border'][0]
+    cY = in_area['border'][1]
+
+    indC = in_area['size'][0]
+    indD = in_area['size'][1]
 
     icX = int(cX / hX)
     jcY = int(cY / hY)
@@ -91,6 +94,7 @@ def CheckBound(p: Particle, X, Y, x0, y0, cX, cY, indC, indD, u0):
         # отверстие внутреннего прямоугольника
         p.absorption(np.nan)
 
+
 def main():
     a, b, c, d = get_data_from_file()
     X, Y, Z = form_plane(a, b)
@@ -102,87 +106,24 @@ def main():
     form_circuit(Z, u0)
 
     in_area = form_in_area(a, b, c, d, lenX, lenY)
+    define_in_area(Z, in_area, X[1] - X[0], Y[1] - Y[0])
+    #define_output_area(Z, in_area, X[1] - X[0], Y[1] - Y[0], u0)
 
     
     # Точка нагрева
-    x0 = (1 / 2) * in_area['border'][0] + in_area['size'][0]
-    y0 = (1 / 2) * in_area['border'][1] + in_area['size'][1]
+    x0 = (3 / 2) * in_area['border'][0] + in_area['size'][0]
+    y0 = (1 / 2) * in_area['border'][1]
+    print('(X0, Y0): (', x0, ';', y0, ')')
 
-    cX = in_area['border'][0]
-    cY = in_area['border'][1]
 
-    icX = int(in_area['border'][0] / (X[1] - X[0]))
-    jcY = int(in_area['border'][1] / (Y[1] - Y[0]))
-
-    indC = int((lenX / a) * c)
-    indD = int((lenY / b) * d)
-
-    for i in range(icX, icX + indC + 1):
-        for j in range(jcY, jcY + indD):
-            Z[i][j] = np.nan
-
-    for j in range(jcY, jcY + indD + 1):
-        Z[icX][j] = u0
-        Z[icX + indC][j] = u0
-
-    for i in range(icX, icX + indC + 1):
-        Z[i][jcY] = u0
-        Z[i][jcY + indD] = u0
-
-    # run stochastic method
-    M = 100
-    t = time()
+    # Стохастический метод
+    M = 10
     for i in range(lenX):
         for j in range(lenY):
-            stochastic_solve_point(i, j, X, Y, Z, x0, y0, cX, cY, indC, indD, u0, CheckBound, rightPart, M)
-    print(f"seq stochastic method: {time() - t} sec")
+            stochastic_solve_point(i, j, X, Y, Z, x0, y0, in_area, u0, CheckBound, rightPart, M)
 
-
-
-
-    zmax = Z[0][0]
-    imax = 0
-    jmax = 0
-    for i in range(len(X)):
-        for j in range(len(Y)):
-            if zmax < Z[i][j]:
-                zmax = Z[i][j]
-                imax = i
-                jmax = j
-
-    print(x0, y0)
-    print(X[imax], Y[jmax])
-    print("max Z = ", zmax)
-    test = (X[imax], Y[jmax], zmax)
-    np.set_printoptions(precision=0)
-    # print(Z)
-
-    X, Y = np.meshgrid(X, Y, indexing='ij')
-    show_3d_graph(X, Y, Z, center=(x0, y0)) # test=test
-
+    show_3d_graph(X, Y, Z, center=(x0, y0))
 
 
 if __name__ == "__main__":
     main()
-
-'''
-# f
-
-def create_shared_memory_nparray(data):
-    d_size = np.dtype(NP_DATA_TYPE).itemsize * np.prod(ARRAY_SHAPE)
-
-    shm = shared_memory.SharedMemory(create=True, size=d_size, name=NP_SHARED_NAME)
-    # numpy array on shared memory buffer
-    dst = np.ndarray(shape=ARRAY_SHAPE, dtype=NP_DATA_TYPE, buffer=shm.buf)
-    dst[:] = data[:]
-    print(f'NP SIZE: {(dst.nbytes / 1024) / 1024}')
-    return shm
-
-
-def release_shared(name):
-    shm = shared_memory.SharedMemory(name=name)
-    shm.close()
-    shm.unlink()  # Free and release the shared memory block
-
-# Z = np.full((len(X), len(Y)), -1, dtype=np.double)
-'''
