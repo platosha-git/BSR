@@ -54,16 +54,16 @@ def CheckBound(p: Particle, X, Y, heat_point, in_area, u0):
 
     # Outer area: left, right, down, up
     if p.i <= 0:
-        return p.reflection(F0, k, f_by_index, X, Y, heat_point, hX, di = +1)
+        return p.reflection(-F0, k, f_by_index, X, Y, heat_point, hX, di = +1)
 
     if p.i >= lenX - 1:
         return p.reflection(F0, k, f_by_index, X, Y, heat_point, hX, di = -1)
 
     if p.j <= 0:
-        return p.reflection(-F0, k, f_by_index, X, Y, heat_point, hY, dj = +1)
+        return p.reflection(F0, k, f_by_index, X, Y, heat_point, hY, dj = +1)
 
     if p.j >= lenY - 1:
-        return p.reflection(-F0, k, f_by_index, X, Y, heat_point, hY, dj = -1)
+        return p.reflection(F0, k, f_by_index, X, Y, heat_point, hY, dj = -1)
 
 
     # Inner area: left, right, down, up

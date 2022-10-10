@@ -42,6 +42,8 @@ def main():
         for j in range(lenY):
             stochastic_solve_point(i, j, X, Y, Z, heat_point, in_area, u0, CheckBound, rightPart, M)
 
+    z = np.nanmax(Z) * 1.01
+    print('Max Z: ', '{:.2f}'.format(z))
     show_3d_graph(X, Y, Z, center=(heat_point[0], heat_point[1]))
 
 

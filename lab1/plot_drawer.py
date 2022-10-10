@@ -12,30 +12,15 @@ def show_3d_graph(X, Y, Z, center=None, test=None):
 
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 
-    # plot_wireframe, plot_surface
-    surf = ax.plot_surface(X, Y, Z, cmap=cm.inferno, \
-    edgecolor='darkred', linewidth=0.1)
-
-    # cset = ax.contourf(X, Y, Z, zdir='z', cmap=cm.inferno)
-
-    # Customize the z axis.
-    #ax.set_zlim(-1.01, 1.01)
-    ax.zaxis.set_major_locator(LinearLocator(10))
-    # A StrMethodFormatter is used automatically
-    ax.zaxis.set_major_formatter('{x:.02f}')
-
-    # Add a color bar which maps values to colors.
+    surf = ax.plot_surface(X, Y, Z, cmap=cm.inferno, edgecolor='darkred', linewidth=0.1)
     fig.colorbar(surf, shrink=0.5, aspect=5)
+
+    ax.zaxis.set_major_locator(LinearLocator(10))
+    ax.zaxis.set_major_formatter('{x:.01f}')
 
     if center:
         x, y = center
         z = np.nanmax(Z) * 1.01
         ax.scatter(x, y, z, marker='o')
 
-    if test:
-        x, y, z = test
-        ax.scatter(x, y, z, marker='^')
-
-    #plt.axis('equal')
-    #ax.set_box_aspect(aspect = (1, 1, 1))
     plt.show()

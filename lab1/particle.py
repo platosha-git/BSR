@@ -40,7 +40,7 @@ class Particle:
         self.u = u0
 
     # отражение на границе (краевая задача 2ого рода -- задан поток тепла F0)
-    def reflection(self, F0, k, Q: Callable[[int, int, npt.ArrayLike, npt.ArrayLike, float, float], float], X, Y, heat_point, h, di=0, dj=0):
+    def reflection(self, F0, k, Q, X, Y, heat_point, h, di=0, dj=0):
         self.i += di
         self.j += dj
         self.addA((Q(self.i, self.j, X, Y, heat_point[0], heat_point[1]) * h / 2 + F0) * h / k)
