@@ -10,12 +10,12 @@ vector2=array[1..mf,1..mf] of real;
 
 var {раздел описания переменных, которые мы будем использовать в
 программе}
-i, j, Nx, Ny: integer;
+i, j, Nx, Ny, N1x, N1y: integer;
 T, Tn: vector2;
 alfa, beta: vector1;
 ai, bi, ci, fi, d, d1: real;
-lamda, ro, c: real;
-kapa1, kapa2, Te1, Te2, eps1: real;
+a, lamda, ro, c: real;
+kapa1, kapa2, Te1, Te2, eps1, q: real;
 hx, hy, tau, t_end, time: real;
 T0, L, H: real;
 fx, fy, fz: text;
@@ -37,13 +37,19 @@ begin
     Te2 := 250.0;
     eps1 := 0.8;
     T0 := 300.0;
+    q := 10000;
     
     {определяем расчетные шаги сетки по пространственным координатам}
+    N1x:=46;
+    N1y:=20;
     hx:=L/(Nx-1);
     hy:=H/(Ny-1);
     
     {определяем расчетный шаг сетки по времени}
     tau:=t_end/1000.0;
+
+    {определяем коэффициент температуропроводности}
+    a:=lamda/(ro*c);
 
     for i:= 1 to Nx do
         for j:= 1 to Ny do
@@ -66,46 +72,52 @@ begin
             {определяем alfa начальный прогоночный коэффициент на основе левого 
             граничного условия, используя соотношение (48)}
             alfa[1]:=2.0*tau*lamda/(2.0*tau*(lamda+kapa1*hx)+ro*c*sqr(hx));
-            
+            //alfa[1]:=2.0*a*tau*lamda/(lamda*sqr(hx)+2.0*a*tau*(lamda+kapa1*hx));
+
             {цикл с постусловием, позволяющий итерационно вычислять поле
             температуры, вследствие наличия нелинейности в левом граничном
             условии}
-            // repeat
-            //     {определяем beta начальный прогоночный коэффициент на основе
-            //     левого граничного условия, используя соотношение (48), при этом
-            //     начинаем итерационный цикл по левому граничному условию}
-            //     d:=T[1,j];
-            //     beta[1]:=(ro*c*sqr(hx)*Tn[1,j]+2.0*tau*kapa1*hx*Te1+2.0*tau
-            //         *eps1*sigma*hx*(sqr(sqr(Te1))-sqr(sqr(d))))
-            //         /(2.0*tau*(lamda+kapa1*hx)+ro*c*sqr(hx));
-                
-            //     {цикл с параметром для определения прогоночных коэффициентов по
-            //     формуле (8)}
-            //     for i:= 2 to Nx-1 do
-            //     begin
-            //         {ai, bi, ci, fi – коэффициенты канонического представления СЛАУ с
-            //         трехдиагональной матрицей}
-            //         ai:=lamda/sqr(hx);
-            //         bi:=2.0*lamda/sqr(hx)+ro*c/tau;
-            //         ci:=lamda/sqr(hx);
-            //         fi:=-ro*c*Tn[i,j]/tau;
+            repeat
+                {определяем beta начальный прогоночный коэффициент на основе
+                левого граничного условия, используя соотношение (48), при этом
+                начинаем итерационный цикл по левому граничному условию}
+                d:=T[1,j];
+                beta[1]:=(ro*c*sqr(hx)*Tn[1,j]+2.0*tau*kapa1*hx*Te1+2.0*tau
+                    *eps1*sigma*hx*(sqr(sqr(Te1))-sqr(sqr(d))))
+                    /(2.0*tau*(lamda+kapa1*hx)+ro*c*sqr(hx));
 
-            //         {alfa[i], beta[i] – прогоночные коэффициенты}
-            //         alfa[i]:=ai/(bi-ci*alfa[i-1]);
-            //         beta[i]:=(ci*beta[i-1]-fi)/(bi-ci*alfa[i-1]);
-            //     end;
+                //beta[1]:=(lamda*sqr(hx)*T[1,j]+2.0*a*tau*kapa1*hx*Te1)/(lamda*sqr(hx)+2.0*a*tau*(lamda+kapa1*hx));
                 
-            //     {определяем значение температуры на правой границе, используя
-            //     соотношение (21) при условии, что q 2 = 0}
-            //     T[Nx,j]:=(ro*c*sqr(hx)*Tn[Nx,j]+2.0*tau*lamda*beta[Nx-1])
-            //             /(ro*c*sqr(hx)+2.0*tau*lamda*(1-alfa[Nx-1]));
+                {цикл с параметром для определения прогоночных коэффициентов по
+                формуле (8)}
+                for i:= 2 to Nx-1 do
+                begin
+                    {ai, bi, ci, fi – коэффициенты канонического представления СЛАУ с
+                    трехдиагональной матрицей}
+                    ai:=lamda/sqr(hx);
+                    bi:=2.0*lamda/sqr(hx)+ro*c/tau;
+                    ci:=lamda/sqr(hx);
+                    fi:=-ro*c*Tn[i,j]/tau;
 
-            //     {используя соотношение (7) определяем неизвестное поле температуры
-            //     на промежуточном (n+1/2) временном слое}
-            //     for i:= Nx-1 downto 1 do
-            //         T[i,j]:=alfa[i]*T[i+1,j]+beta[i];
+                    if (i=N1x) then fi:=-ro*c*Tn[i,j]/tau-hx*(i-1)*q;
+
+                    {alfa[i], beta[i] – прогоночные коэффициенты}
+                    alfa[i]:=ai/(bi-ci*alfa[i-1]);
+                    beta[i]:=(ci*beta[i-1]-fi)/(bi-ci*alfa[i-1]);
+                end;
                 
-            // until abs(d-T[1,j])<=eps; {значение температуры на левой границе определили}
+                {определяем значение температуры на правой границе, используя
+                соотношение (21) при условии, что q 2 = 0}
+                T[Nx,j]:=(ro*c*sqr(hx)*Tn[Nx,j]+2.0*tau*lamda*beta[Nx-1])
+                        /(ro*c*sqr(hx)+2.0*tau*lamda*(1-alfa[Nx-1]));
+                //T[Nx,j]:=(lamda*sqr(hx)*T[Nx,j]+2.0*a*tau*(lamda*beta[Nx-1]+kapa1*hx*Te1)) /(lamda*sqr(hx)+2.0*a*tau*(lamda*(1-alfa[Nx-1])+kapa1*hx));
+
+                {используя соотношение (7) определяем неизвестное поле температуры
+                на промежуточном (n+1/2) временном слое}
+                for i:= Nx-1 downto 1 do
+                    T[i,j]:=alfa[i]*T[i+1,j]+beta[i];
+                
+            until abs(d-T[1,j])<=eps; {значение температуры на левой границе определили}
         
         end; {поле температуры на промежуточном (n+1/2) временном слое определили}
     
@@ -117,6 +129,9 @@ begin
         q 1 = 0}
             alfa[1]:=2.0*tau*lamda/(2.0*tau*lamda+ro*c*sqr(hy));
             beta[1]:=ro*c*sqr(hy)*T[i,1]/(2.0*tau*lamda+ro*c*sqr(hy));
+
+            //alfa[1]:=2.0*a*tau*lamda/(lamda*sqr(hy)+2.0*a*tau*(lamda+kapa1*hy));
+            //beta[1]:=(lamda*sqr(hy)*T[i,1]+2.0*a*tau*kapa1*hy*Te1)/(lamda*sqr(hy)+2.0*a*tau*(lamda+kapa1*hy));
             
             {цикл с параметром для определения прогоночных коэффициентов по
             формуле (8)}
@@ -129,6 +144,8 @@ begin
                 ci:=lamda/sqr(hy);
                 fi:=-ro*c*T[i,j]/tau;
                 
+                if (j=N1y) then fi:=-ro*c*T[i,j]/tau-hy*(j-1)*q;
+
                 {alfa[j], beta[j] – прогоночные коэффициенты}
                 alfa[j]:=ai/(bi-ci*alfa[j-1]);
                 beta[j]:=(ci*beta[j-1]-fi)/(bi-ci*alfa[j-1]);
@@ -147,6 +164,8 @@ begin
                 T[i,Ny]:=(ro*c*sqr(hy)*d+2.0*tau*(lamda*beta[Ny-1]+kapa2*hy*Te2
                 +eps1*sigma*hy*(sqr(sqr(Te2))-sqr(sqr(d1)))))/(ro*c*sqr(hy)
                 +2.0*tau*(lamda*(1-alfa[Ny-1])+kapa2*hy));
+
+                //T[i,Ny]:=(lamda*sqr(hy)*T[i,Ny]+2.0*a*tau*(lamda*beta[Ny-1]+kapa1*hy*Te1)) /(lamda*sqr(hy)+2.0*a*tau*(lamda*(1-alfa[Ny-1])+kapa1*hy));
             until abs(d1-T[i,Ny])<=eps; 
             
             for j:= Ny-1 downto 1 do
