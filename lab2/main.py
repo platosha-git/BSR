@@ -1,25 +1,18 @@
-from plot_drawer import show_3d_graph
+from var2 import difference_model
 from data_former import *
+from plot_drawer import show_3d_graph
 
-X_filename = './X.txt'
-Y_filename = './Y.txt'
-Z_filename = './Z.txt'
-
-X_size = 50
-Y_size = 50
+Nx, Ny = 50, 50
+Cx, Cy = 46, 20
 
 def main():
-	X = read_vector(X_filename)
-	Y = read_vector(Y_filename)
-	Z = read_matrix(Z_filename, X_size, Y_size)
+	X, Y, Z = difference_model(Nx, Ny, Cx, Cy)
 
-	a, b, c, d = get_data_from_file()
-	in_area = form_in_area(a, b, c, d, X_size, Y_size)
+	a, b, cc, d = get_data_from_file()
+	in_area = form_in_area(a, b, cc, d, Nx, Ny)
 	define_in_area(Z, in_area, X[1] - X[0], Y[1] - Y[0])
 
-	show_3d_graph(X, Y, Z)
-
+	show_3d_graph(X, Y, Z, center=(X[Cx-1], Y[Cy-1], Z[Cx-1][Cy-1]))
 
 if __name__ == "__main__":
 	main()
-	
