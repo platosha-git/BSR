@@ -23,8 +23,8 @@ fx, fy, fz: text;
 begin
     clrscr;
     
-    Nx := 50;
-    Ny := 50;
+    Nx := 5;
+    Ny := 5;
     t_end := 36000;
     L := 0.6;
     H := 0.4;
@@ -33,10 +33,10 @@ begin
     c := 1900.0;
     kapa1 := 50.0;
     kapa2 := 35.0;
-    Te1 := 200.0;
-    Te2 := 250.0;
+    Te1 := 20.0;
+    Te2 := 25.0;
     eps1 := 0.8;
-    T0 := 300.0;
+    T0 := 30.0;
     
     {определяем расчетные шаги сетки по пространственным координатам}
     hx:=L/(Nx-1);
@@ -70,56 +70,53 @@ begin
             {цикл с постусловием, позволяющий итерационно вычислять поле
             температуры, вследствие наличия нелинейности в левом граничном
             условии}
-            // repeat
-            //     {определяем beta начальный прогоночный коэффициент на основе
-            //     левого граничного условия, используя соотношение (48), при этом
-            //     начинаем итерационный цикл по левому граничному условию}
-            //     d:=T[1,j];
-            //     beta[1]:=(ro*c*sqr(hx)*Tn[1,j]+2.0*tau*kapa1*hx*Te1+2.0*tau
-            //         *eps1*sigma*hx*(sqr(sqr(Te1))-sqr(sqr(d))))
-            //         /(2.0*tau*(lamda+kapa1*hx)+ro*c*sqr(hx));
+            repeat
+                {определяем beta начальный прогоночный коэффициент на основе
+                левого граничного условия, используя соотношение (48), при этом
+                начинаем итерационный цикл по левому граничному условию}
+                d:=T[1,j];
+                beta[1]:=(ro*c*sqr(hx)*Tn[1,j]+2.0*tau*kapa1*hx*Te1+2.0*tau
+                    *eps1*sigma*hx*(sqr(sqr(Te1))-sqr(sqr(d))))
+                    /(2.0*tau*(lamda+kapa1*hx)+ro*c*sqr(hx));
                 
-            //     {цикл с параметром для определения прогоночных коэффициентов по
-            //     формуле (8)}
-            //     for i:= 2 to Nx-1 do
-            //     begin
-            //         {ai, bi, ci, fi – коэффициенты канонического представления СЛАУ с
-            //         трехдиагональной матрицей}
-            //         ai:=lamda/sqr(hx);
-            //         bi:=2.0*lamda/sqr(hx)+ro*c/tau;
-            //         ci:=lamda/sqr(hx);
-            //         fi:=-ro*c*Tn[i,j]/tau;
+                {цикл с параметром для определения прогоночных коэффициентов по
+                формуле (8)}
+                for i:= 2 to Nx-1 do
+                begin
+                    {ai, bi, ci, fi – коэффициенты канонического представления СЛАУ с
+                    трехдиагональной матрицей}
+                    ai:=lamda/sqr(hx);
+                    bi:=2.0*lamda/sqr(hx)+ro*c/tau;
+                    ci:=lamda/sqr(hx);
+                    fi:=-ro*c*Tn[i,j]/tau;
 
-            //         {alfa[i], beta[i] – прогоночные коэффициенты}
-            //         alfa[i]:=ai/(bi-ci*alfa[i-1]);
-            //         beta[i]:=(ci*beta[i-1]-fi)/(bi-ci*alfa[i-1]);
-            //     end;
+                    {alfa[i], beta[i] – прогоночные коэффициенты}
+                    alfa[i]:=ai/(bi-ci*alfa[i-1]);
+                    beta[i]:=(ci*beta[i-1]-fi)/(bi-ci*alfa[i-1]);
+                end;
                 
-            //     {определяем значение температуры на правой границе, используя
-            //     соотношение (21) при условии, что q 2 = 0}
-            //     T[Nx,j]:=(ro*c*sqr(hx)*Tn[Nx,j]+2.0*tau*lamda*beta[Nx-1])
-            //             /(ro*c*sqr(hx)+2.0*tau*lamda*(1-alfa[Nx-1]));
+                {определяем значение температуры на правой границе, используя
+                соотношение (21) при условии, что q 2 = 0}
+                T[Nx,j]:=(ro*c*sqr(hx)*Tn[Nx,j]+2.0*tau*lamda*beta[Nx-1])
+                        /(ro*c*sqr(hx)+2.0*tau*lamda*(1-alfa[Nx-1]));
 
-            //     {используя соотношение (7) определяем неизвестное поле температуры
-            //     на промежуточном (n+1/2) временном слое}
-            //     for i:= Nx-1 downto 1 do
-            //         T[i,j]:=alfa[i]*T[i+1,j]+beta[i];
+                {используя соотношение (7) определяем неизвестное поле температуры
+                на промежуточном (n+1/2) временном слое}
+                for i:= Nx-1 downto 1 do
+                    T[i,j]:=alfa[i]*T[i+1,j]+beta[i];
                 
-            // until abs(d-T[1,j])<=eps; {значение температуры на левой границе определили}
+            until abs(d-T[1,j])<=eps; {значение температуры на левой границе определили}
         
         end; {поле температуры на промежуточном (n+1/2) временном слое определили}
     
         {решаем СЛАУ в направлении оси Оу для определения поля температуры на целом (n+1) временном слое}
         for i:=1 to Nx do
         begin
-        {определяем начальные прогоночные коэффициенты на основе нижнего
-        граничного условия, используя соотношения (20) при условии, что
-        q 1 = 0}
             alfa[1]:=2.0*tau*lamda/(2.0*tau*lamda+ro*c*sqr(hy));
             beta[1]:=ro*c*sqr(hy)*T[i,1]/(2.0*tau*lamda+ro*c*sqr(hy));
             
-            {цикл с параметром для определения прогоночных коэффициентов по
-            формуле (8)}
+            //Writeln(alfa[1], beta[1]);
+
             for j:= 2 to Ny-1 do
             begin
                 {ai, bi, ci, fi – коэффициенты канонического представления СЛАУ с
@@ -132,14 +129,14 @@ begin
                 {alfa[j], beta[j] – прогоночные коэффициенты}
                 alfa[j]:=ai/(bi-ci*alfa[j-1]);
                 beta[j]:=(ci*beta[j-1]-fi)/(bi-ci*alfa[j-1]);
+
+                //Writeln(alfa[j], beta[j]);
+
             end;
             
-            {запоминаем значение температуры на правой границе с
-            промежуточного (n+1/2) временного слоя}
+
             d:=T[i,Ny];
-            {цикл с постусловием, позволяющий итерационно вычислить значение
-            температуры на правой границе, вследствие наличия нелинейности в
-            этом граничном условии}
+            Writeln(d);
             repeat
                 d1:=T[i,Ny];
                 {определяем значение температуры на правой границе на основе
@@ -147,6 +144,13 @@ begin
                 T[i,Ny]:=(ro*c*sqr(hy)*d+2.0*tau*(lamda*beta[Ny-1]+kapa2*hy*Te2
                 +eps1*sigma*hy*(sqr(sqr(Te2))-sqr(sqr(d1)))))/(ro*c*sqr(hy)
                 +2.0*tau*(lamda*(1-alfa[Ny-1])+kapa2*hy));
+                //Writeln(i, ' ', Ny);
+                //Writeln(ro*c*sqr(hy)*d);
+                //Writeln(2.0*tau*(lamda*beta[Ny-1]));
+                //Writeln(kapa2*hy*Te2);
+                //Writeln(eps1*sigma*hy*(sqr(sqr(Te2))-sqr(sqr(d1))));
+                //Writeln((ro*c*sqr(hy)+2.0*tau*(lamda*(1-alfa[Ny-1])+kapa2*hy)));
+                //Writeln(T[i,Ny]);
             until abs(d1-T[i,Ny])<=eps; 
             
             for j:= Ny-1 downto 1 do
@@ -155,38 +159,45 @@ begin
     end; {цикл с предусловием окончен}
     {выводим результат в файл}
 
-    Writeln('Длина пластины L = ', L:0:2);
-    Writeln('Ширина пластины H = ', H:0:2);
-    Writeln('');
-    Writeln('Число узлов по x = ', Nx);
-    Writeln('Число узлов по y = ', Ny);
-    Writeln('');
-    Writeln('Начальная температура T0 = ', T0:0:3);
-    Writeln('Температура окружающей среды T1 = ', Te1:0:4);
-    Writeln('');
-    Writeln('Шаг по x = ', hx:0:3);
-    Writeln('Шаг по y = ', hy:0:3);
-    Writeln('Время t = ', t_end:0:3);
-
-    Assign(fx, 'X.txt');
-    Rewrite(fx);
-    for i:=1 to Nx do
-        Writeln(fx, hx * (i-1):0:8);
-    close(fx);
-
-    Assign(fy, 'Y.txt');
-    Rewrite(fy);
-    for j:=1 to Ny do
-        Writeln(fy, hy * (j-1):0:8);
-    close(fy);
-
-    Assign(fz, 'Z.txt');
-    Rewrite(fz);
     for i:=1 to Nx do
     begin
         for j:=1 to Ny do
-            Write(fz, T[i,j]:0:8, ' ');
-        Writeln(fz, '')
+            Writeln(hx*(i-1):0:8, ' ', hy*(j-1):0:8, ' ', T[i,j]:0:10);
     end;
-    close(fz);
+
+    // Writeln('Длина пластины L = ', L:0:2);
+    // Writeln('Ширина пластины H = ', H:0:2);
+    // Writeln('');
+    // Writeln('Число узлов по x = ', Nx);
+    // Writeln('Число узлов по y = ', Ny);
+    // Writeln('');
+    // Writeln('Начальная температура T0 = ', T0:0:3);
+    // Writeln('Температура окружающей среды T1 = ', Te1:0:4);
+    // Writeln('');
+    // Writeln('Шаг по x = ', hx:0:3);
+    // Writeln('Шаг по y = ', hy:0:3);
+    // Writeln('Время t = ', t_end:0:3);
+
+
+    // Assign(fx, 'X.txt');
+    // Rewrite(fx);
+    // for i:=1 to Nx do
+    //     Writeln(fx, hx * (i-1):0:8);
+    // close(fx);
+
+    // Assign(fy, 'Y.txt');
+    // Rewrite(fy);
+    // for j:=1 to Ny do
+    //     Writeln(fy, hy * (j-1):0:8);
+    // close(fy);
+
+    // Assign(fz, 'Z.txt');
+    // Rewrite(fz);
+    // for i:=1 to Nx do
+    // begin
+    //     for j:=1 to Ny do
+    //         Write(fz, T[i,j]:0:8, ' ');
+    //     Writeln(fz, '')
+    // end;
+    // close(fz);
 end.
