@@ -17,7 +17,7 @@ ai, bi, ci, fi, d, d1: real;
 a, lamda, ro, c: real;
 kapa1, kapa2, Te1, Te2, eps1, q: real;
 hx, hy, tau, t_end, time: real;
-T0, L, H: real;
+T0, L, H, alpha: real;
 fx, fy, fz: text;
 
 begin
@@ -38,6 +38,7 @@ begin
     eps1 := 0.8;
     T0 := 300.0;
     q := 10000;
+    alpha := 0.1; 
     
     {определяем расчетные шаги сетки по пространственным координатам}
     N1x:=46;
@@ -72,7 +73,6 @@ begin
             {определяем alfa начальный прогоночный коэффициент на основе левого 
             граничного условия, используя соотношение (48)}
             alfa[1]:=2.0*tau*lamda/(2.0*tau*(lamda+kapa1*hx)+ro*c*sqr(hx));
-            //alfa[1]:=2.0*a*tau*lamda/(lamda*sqr(hx)+2.0*a*tau*(lamda+kapa1*hx));
 
             {цикл с постусловием, позволяющий итерационно вычислять поле
             температуры, вследствие наличия нелинейности в левом граничном
@@ -85,8 +85,6 @@ begin
                 beta[1]:=(ro*c*sqr(hx)*Tn[1,j]+2.0*tau*kapa1*hx*Te1+2.0*tau
                     *eps1*sigma*hx*(sqr(sqr(Te1))-sqr(sqr(d))))
                     /(2.0*tau*(lamda+kapa1*hx)+ro*c*sqr(hx));
-
-                //beta[1]:=(lamda*sqr(hx)*T[1,j]+2.0*a*tau*kapa1*hx*Te1)/(lamda*sqr(hx)+2.0*a*tau*(lamda+kapa1*hx));
                 
                 {цикл с параметром для определения прогоночных коэффициентов по
                 формуле (8)}
@@ -99,7 +97,8 @@ begin
                     ci:=lamda/sqr(hx);
                     fi:=-ro*c*Tn[i,j]/tau;
 
-                    if (i=N1x) then fi:=-ro*c*Tn[i,j]/tau-hx*(i-1)*q;
+                    if (i=N1x) then fi:= fi - q * Exp(-alpha * (sqr(i - N1x)));
+                    //fi:=-ro*c*Tn[i,j]/tau-hx*(i-1)*q;
 
                     {alfa[i], beta[i] – прогоночные коэффициенты}
                     alfa[i]:=ai/(bi-ci*alfa[i-1]);
@@ -117,7 +116,7 @@ begin
                 for i:= Nx-1 downto 1 do
                     T[i,j]:=alfa[i]*T[i+1,j]+beta[i];
                 
-            until abs(d-T[1,j])<=eps; {значение температуры на левой границе определили}
+            until abs((d-T[1,j]) / T[1, j])<=eps; {значение температуры на левой границе определили}
         
         end; {поле температуры на промежуточном (n+1/2) временном слое определили}
     
@@ -144,7 +143,8 @@ begin
                 ci:=lamda/sqr(hy);
                 fi:=-ro*c*T[i,j]/tau;
                 
-                if (j=N1y) then fi:=-ro*c*T[i,j]/tau-hy*(j-1)*q;
+                //if (j=N1y) then fi:=-ro*c*T[i,j]/tau-hy*(j-1)*q;
+                if (j=N1y) then fi:= fi - q * Exp(-alpha * (sqr(j - N1y)));
 
                 {alfa[j], beta[j] – прогоночные коэффициенты}
                 alfa[j]:=ai/(bi-ci*alfa[j-1]);
@@ -154,25 +154,21 @@ begin
             {запоминаем значение температуры на правой границе с
             промежуточного (n+1/2) временного слоя}
             d:=T[i,Ny];
-            {цикл с постусловием, позволяющий итерационно вычислить значение
+            {цикл, позволяющий итерационно вычислить значение
             температуры на правой границе, вследствие наличия нелинейности в
             этом граничном условии}
             repeat
                 d1:=T[i,Ny];
-                {определяем значение температуры на правой границе на основе
-                правого граничного условия, используя соотношение (49)}
+                {определяем значение температуры на правой границе на основе правого граничного условия}
                 T[i,Ny]:=(ro*c*sqr(hy)*d+2.0*tau*(lamda*beta[Ny-1]+kapa2*hy*Te2
                 +eps1*sigma*hy*(sqr(sqr(Te2))-sqr(sqr(d1)))))/(ro*c*sqr(hy)
                 +2.0*tau*(lamda*(1-alfa[Ny-1])+kapa2*hy));
-
-                //T[i,Ny]:=(lamda*sqr(hy)*T[i,Ny]+2.0*a*tau*(lamda*beta[Ny-1]+kapa1*hy*Te1)) /(lamda*sqr(hy)+2.0*a*tau*(lamda*(1-alfa[Ny-1])+kapa1*hy));
-            until abs(d1-T[i,Ny])<=eps; 
+            until abs((d1-T[i,Ny]) / T[i, Ny])<=eps; 
             
             for j:= Ny-1 downto 1 do
                 T[i,j]:=alfa[j]*T[i,j+1]+beta[j];
         end; {поле температуры на целом (n+1) временном слое определили}
-    end; {цикл с предусловием окончен}
-    {выводим результат в файл}
+    end;
 
     Writeln('Длина пластины L = ', L:0:2);
     Writeln('Ширина пластины H = ', H:0:2);
