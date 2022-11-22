@@ -50,8 +50,8 @@ def main():
 
 	#проводим интегрирование нестационарного уравнения теплопроводности
 	time = 0.0;
-	while time < 1:
-		time = time + 1;
+	while time < t_end:
+		time = time + tau;
 
 		#запоминаем поле температуры на n-ом временном слое
 		for i in range(1, Nx+1):
@@ -118,8 +118,8 @@ def main():
 				ci = lamda / sqr(hy);
 				fi = -ro * c * T[i][j] / tau;
 
-				#if j == N1y:
-				#	fi = fi - q * exp(-alpha * (sqr(j - N1y)));
+				if j == N1y:
+					fi = fi - q * exp(-alpha * (sqr(j - N1y)));
 
 				#alfa[j], beta[j] – прогоночные коэффициенты
 				alfa[j] = ai / (bi - ci * alfa[j-1]);
@@ -144,40 +144,39 @@ def main():
 				T[i][j] = alfa[j] * T[i][j+1] + beta[j];
 
 
-	# print('Длина пластины L = ', L);
-	# print('Толщина пластины H = ', H);
-	# print('Число узлов по пространственной координате x в пластине Nx = ',Nx);
-	# print('Число узлов по пространственной координате y в пластине Ny = ',Ny);
-	# print('\n')
-	# print('Начальная температура T0 = ', T0);
-	# print('Температура внешней среды Te1 = ', Te1);
-	# print('\n');
-	# print('Результат получен с шагом по координате x hx = ', hx);
-	# print('Результат получен с шагом по координате y hy = ', hy);
-	# print('\n');
-	# print('Результат получен с шагом по времени tau = ', tau);
-	# print('Температурное поле в момент времени t = ', t_end);
+	print('Длина пластины L = ', L);
+	print('Толщина пластины H = ', H);
+	print('Число узлов по пространственной координате x в пластине Nx = ',Nx);
+	print('Число узлов по пространственной координате y в пластине Ny = ',Ny);
+	print('\n')
+	print('Начальная температура T0 = ', T0);
+	print('Температура внешней среды Te1 = ', Te1);
+	print('\n');
+	print('Результат получен с шагом по координате x hx = ', hx);
+	print('Результат получен с шагом по координате y hy = ', hy);
+	print('\n');
+	print('Результат получен с шагом по времени tau = ', tau);
+	print('Температурное поле в момент времени t = ', t_end);
 
 	
-	X = [0.0 for i in range(Nx+1)]
+	X = [0.0 for i in range(Nx)]
 	for i in range(1, Nx+1):
-		X[i] = hx * (i-1)
+		X[i-1] = hx * (i-1)
 
-	Y = [0.0 for i in range(Ny+1)]
+	Y = [0.0 for j in range(Ny)]
 	for j in range(1, Ny+1):
-		Y[j] = hy * (j-1)
+		Y[j-1] = hy * (j-1)
 
-	#a, b, cc, d = get_data_from_file()
-	#in_area = form_in_area(a, b, cc, d, Nx, Ny)
-	#define_in_area(T, in_area, X[2] - X[1], Y[2] - Y[1])
-
-	#show_3d_graph(X, Y, T, center=(X[46], Y[20], T[46][20]))
-	# #show_3d_graph(X, Y, T)
-	
-
+	Z = [[0.0] * Ny for i in range(Nx)]
 	for i in range(1, Nx+1):
 		for j in range(1, Ny+1):
-			print(hx*(i-1), hy*(j-1), T[i][j])
+			Z[i-1][j-1] = T[i][j]
+
+	a, b, cc, d = get_data_from_file()
+	in_area = form_in_area(a, b, cc, d, Nx, Ny)
+	define_in_area(Z, in_area, X[1] - X[0], Y[1] - Y[0])
+
+	show_3d_graph(X, Y, Z, center=(X[46], Y[20], Z[46][20]))
 
 if __name__ == "__main__":
 	main()

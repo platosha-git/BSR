@@ -23,8 +23,8 @@ fx, fy, fz: text;
 begin
     clrscr;
     
-    Nx := 5;
-    Ny := 5;
+    Nx := 50;
+    Ny := 50;
     t_end := 36000;
     L := 0.6;
     H := 0.4;
@@ -41,8 +41,8 @@ begin
     alpha := 0.1; 
     
     {определяем расчетные шаги сетки по пространственным координатам}
-    N1x:=4;
-    N1y:=1;
+    N1x:=46;
+    N1y:=20;
     hx:=L/(Nx-1);
     hy:=H/(Ny-1);
     
@@ -58,9 +58,9 @@ begin
     
     {проводим интегрирование нестационарного уравнения теплопроводности}
     time:=0;
-    while time<1 do
+    while time<t_end do
     begin
-        time:=time+1;
+        time:=time+tau;
         
         {запоминаем поле температуры на n-ом временном слое}
         for i:=1 to Nx do
@@ -144,7 +144,7 @@ begin
                 fi:=-ro*c*T[i,j]/tau;
                 
                 //if (j=N1y) then fi:=-ro*c*T[i,j]/tau-hy*(j-1)*q;
-                //if (j=N1y) then fi:= fi - q * Exp(-alpha * (sqr(j - N1y)));
+                if (j=N1y) then fi:= fi - q * Exp(-alpha * (sqr(j - N1y)));
 
                 {alfa[j], beta[j] – прогоночные коэффициенты}
                 alfa[j]:=ai/(bi-ci*alfa[j-1]);
@@ -170,43 +170,43 @@ begin
         end; {поле температуры на целом (n+1) временном слое определили}
     end;
 
-    // Writeln('Длина пластины L = ', L:0:2);
-    // Writeln('Ширина пластины H = ', H:0:2);
-    // Writeln('');
-    // Writeln('Число узлов по x = ', Nx);
-    // Writeln('Число узлов по y = ', Ny);
-    // Writeln('');
-    // Writeln('Начальная температура T0 = ', T0:0:3);
-    // Writeln('Температура окружающей среды T1 = ', Te1:0:4);
-    // Writeln('');
-    // Writeln('Шаг по x = ', hx:0:3);
-    // Writeln('Шаг по y = ', hy:0:3);
-    // Writeln('Время t = ', t_end:0:3);
+    Writeln('Длина пластины L = ', L:0:2);
+    Writeln('Ширина пластины H = ', H:0:2);
+    Writeln('');
+    Writeln('Число узлов по x = ', Nx);
+    Writeln('Число узлов по y = ', Ny);
+    Writeln('');
+    Writeln('Начальная температура T0 = ', T0:0:3);
+    Writeln('Температура окружающей среды T1 = ', Te1:0:4);
+    Writeln('');
+    Writeln('Шаг по x = ', hx:0:3);
+    Writeln('Шаг по y = ', hy:0:3);
+    Writeln('Время t = ', t_end:0:3);
 
-    // Assign(fx, 'X.txt');
-    // Rewrite(fx);
-    // for i:=1 to Nx do
-    //     Writeln(fx, hx * (i-1):0:8);
-    // close(fx);
+    Assign(fx, 'X.txt');
+    Rewrite(fx);
+    for i:=1 to Nx do
+        Writeln(fx, hx * (i-1):0:8);
+    close(fx);
 
-    // Assign(fy, 'Y.txt');
-    // Rewrite(fy);
-    // for j:=1 to Ny do
-    //     Writeln(fy, hy * (j-1):0:8);
-    // close(fy);
+    Assign(fy, 'Y.txt');
+    Rewrite(fy);
+    for j:=1 to Ny do
+        Writeln(fy, hy * (j-1):0:8);
+    close(fy);
 
-    // Assign(fz, 'Z.txt');
-    // Rewrite(fz);
-    // for i:=1 to Nx do
-    // begin
-    //     for j:=1 to Ny do
-    //         Write(fz, T[i,j]:0:8, ' ');
-    //     Writeln(fz, '')
-    // end;
-    // close(fz);
+    Assign(fz, 'Z.txt');
+    Rewrite(fz);
+    for i:=1 to Nx do
+    begin
+        for j:=1 to Ny do
+            Write(fz, T[i,j]:0:8, ' ');
+        Writeln(fz, '')
+    end;
+    close(fz);
 
     for i:=1 to Nx do
         for j:=1 to Ny do
-            Writeln(hx * (i-1), ' ', hy * (j-1), ' ', T[i,j]:0:8);
+            Writeln(hx*(i-1), ' ', hy*(j-1), ' ', T[i, j]);
 
 end.

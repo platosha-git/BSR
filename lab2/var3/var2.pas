@@ -34,7 +34,7 @@ begin
     kapa1 := 50.0;
     kapa2 := 35.0;
     Te1 := 200.0;
-    Te2 := 250.0;
+    Te2 := 200.0;
     eps1 := 0.8;
     T0 := 300.0;
     q := 10000;
@@ -204,4 +204,5 @@ begin
         Writeln(fz, '')
     end;
     close(fz);
+
 end.
