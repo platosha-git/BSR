@@ -1,3 +1,6 @@
+import matplotlib
+matplotlib.use('tkagg')
+
 import matplotlib.pyplot as plt
 from math import fabs, sqrt
 import seaborn as sb
